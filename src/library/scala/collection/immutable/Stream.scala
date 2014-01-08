@@ -1107,10 +1107,14 @@ object Stream extends SeqFactory[Stream] {
     override def head = hd
     @volatile private[this] var tlVal: Stream[A] = _
     def tailDefined: Boolean = tlVal ne null
+    private[this] var tlFunc: () => Stream[A] = tl _
     override def tail: Stream[A] = {
       if (!tailDefined)
         synchronized {
-          if (!tailDefined) tlVal = tl
+          if (!tailDefined) {
+            tlVal = tlFunc()
+            tlFunc = null
+          }
         }
 
       tlVal
